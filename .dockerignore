@@ -1,0 +1,6 @@
+.claude
+.git
+.vscode
+*.test
+*.md
+pacman
