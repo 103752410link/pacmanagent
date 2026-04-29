@@ -89,7 +89,11 @@ func (h *Handler) registerAgent(c *gin.Context) {
 }
 
 func (h *Handler) doRegister(c *gin.Context, name, strategy string) {
-	a := h.Registry.Register(name, strategy)
+	a, err := h.Registry.Register(name, strategy)
+	if err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		return
+	}
 
 	var color string
 	var role string

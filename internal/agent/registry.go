@@ -38,19 +38,25 @@ type Registry struct {
 	agents    map[string]*Agent
 	agentsList []*Agent
 	playerID  string
+	maxAgents int
 }
 
 // NewRegistry creates a new agent registry
 func NewRegistry() *Registry {
 	return &Registry{
-		agents: make(map[string]*Agent),
+		agents:    make(map[string]*Agent),
+		maxAgents: 5,
 	}
 }
 
 // Register adds a new agent. First agent becomes player, rest become ghosts.
-func (r *Registry) Register(name, strategy string) *Agent {
+func (r *Registry) Register(name, strategy string) (*Agent, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	if len(r.agents) >= r.maxAgents {
+		return nil, fmt.Errorf("agent limit reached (max %d)", r.maxAgents)
+	}
 
 	counter := len(r.agents) + 1
 	id := generateID(counter)
@@ -71,7 +77,7 @@ func (r *Registry) Register(name, strategy string) *Agent {
 	}
 	r.agents[id] = agent
 	r.agentsList = append(r.agentsList, agent)
-	return agent
+	return agent, nil
 }
 
 // Unregister removes an agent
@@ -132,6 +138,13 @@ func (r *Registry) Count() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return len(r.agents)
+}
+
+// MaxAgents returns the maximum allowed agents
+func (r *Registry) MaxAgents() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.maxAgents
 }
 
 func generateID(n int) string {
